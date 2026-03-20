@@ -1,5 +1,8 @@
 .card {
     position: relative;
+    backdrop-filter: blur(var(--card-blur, 0px));
+    -webkit-backdrop-filter: blur(var(--card-blur, 0px));
+    opacity: var(--card-opacity, 1);
 }
 
 .profile-page {

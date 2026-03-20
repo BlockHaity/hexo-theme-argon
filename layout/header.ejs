@@ -44,6 +44,8 @@
 	<meta name="theme-color-origin" content="<%= theme.theme_color %>">
 	<meta name="argon-enable-custom-theme-color" content="<%= theme.show_customize_theme_color_picker %>">
 	<meta name="theme-card-radius" content="<%= theme.card_radius %>">
+	<meta name="theme-card-blur" content="<%= theme.card_blur %>">
+	<meta name="theme-card-opacity" content="<%= theme.card_opacity %>">
 	<meta name="theme-version" content="<%= argon_version() %>">
 	<link rel="icon" href="/assets/img/favicon.ico" type="image/x-icon">
 	<link rel="shortcut icon" href="/assets/img/favicon.ico" type="image/x-icon">
@@ -463,6 +465,18 @@
 			<div id="blog_setting_card_radius_to_default" style="cursor: pointer;" tooltip="恢复默认">圆角</div>
 			<div style="flex: 1;margin-left: 20px;margin-right: 8px;transform: translateY(2px);">
 				<div id="blog_setting_card_radius"></div>
+			</div>
+		</div>
+		<div class="blog-setting-item mb-3">
+			<div id="blog_setting_card_blur_to_default" style="cursor: pointer;" tooltip="恢复默认">模糊</div>
+			<div style="flex: 1;margin-left: 20px;margin-right: 8px;transform: translateY(2px);">
+				<div id="blog_setting_card_blur"></div>
+			</div>
+		</div>
+		<div class="blog-setting-item mb-3">
+			<div id="blog_setting_card_opacity_to_default" style="cursor: pointer;" tooltip="恢复默认">透明度</div>
+			<div style="flex: 1;margin-left: 20px;margin-right: 8px;transform: translateY(2px);">
+				<div id="blog_setting_card_opacity"></div>
 			</div>
 		</div>
 		<% if (theme.show_customize_theme_color_picker){ %>

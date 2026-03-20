@@ -1,12 +1,34 @@
 // 读配置文件
-hexo.on('generateBefore', function () {
+hexo.extend.filter.register('after_init', function () {
 	var rootConfig = hexo.config;
-	if (hexo.locals.get) {
-		var data = hexo.locals.get('data');
-		if (data && data.argon) {
-		  hexo.theme.config = data.argon;
+	var themeConfig = hexo.theme.config || {};
+
+	// 读取博客根目录下的 _config.argon.yml
+	var blogArgonConfigPath = hexo.base_dir + '_config.argon.yml';
+	var fs = require('fs');
+	var yaml = require('js-yaml');
+	var blogArgonConfig = {};
+
+	if (fs.existsSync(blogArgonConfigPath)) {
+		try {
+			var blogArgonConfigContent = fs.readFileSync(blogArgonConfigPath, 'utf8');
+			blogArgonConfig = yaml.load(blogArgonConfigContent);
+		} catch (e) {
+			console.error('Error loading _config.argon.yml:', e);
 		}
 	}
+
+	// 合并配置，博客根目录配置优先
+	var mergedConfig = {};
+	for (var key in themeConfig) {
+		mergedConfig[key] = themeConfig[key];
+	}
+	for (var key in blogArgonConfig) {
+		mergedConfig[key] = blogArgonConfig[key];
+	}
+
+	// 设置主题配置
+	hexo.theme.config = mergedConfig;
 	hexo.theme.config.rootConfig = rootConfig;
 });
 
