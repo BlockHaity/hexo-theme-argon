@@ -267,6 +267,9 @@ hexo.extend.helper.register('argon_preprocess_article', function (content, theme
 		content = content.replace(/<img(.*?)data-full-url=[\'"]([^\'"]+)[\'"](.*)>/ig,"<img$1data-full-url=\"$2\" data-original=\"$2\"$3>");
 		content = content.replace(/<img(.*?)srcset=[\'"](.*?)[\'"](.*)>/ig,"<img$1$3>");
 	}
+	// 处理代码块，移除外部的 figure 和 table 包装
+	// 匹配所有带有 language 类的代码块
+	content = content.replace(/<figure class="highlight [^>]*"><table><tr><td class="gutter"><pre>.*?<\/pre><\/td><td class="code">(<pre.*?<\/pre>)<\/td><\/tr><\/table><\/figure>/sg,"$1");
 	// More Tag
 	if (moretag){
 		if (content.search(/<!--more(.*?)-->/i) !== -1){
