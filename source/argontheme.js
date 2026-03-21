@@ -541,28 +541,30 @@ if (argonConfig.headroom){
 		}
 	}
 	let slider = document.getElementById('blog_setting_card_blur');
-	noUiSlider.create(slider, {
-		start: [localStorage["argon_card_blur"] == undefined ? $("meta[name='theme-card-blur']").attr("content") : localStorage["argon_card_blur"]],
-		step: 1,
-		connect: [true, false],
-		range: {
-			'min': [0],
-			'max': [20]
-		}
-	});
-	slider.noUiSlider.on('update', function (values){
-		let value = values[0];
-		setCardBlur(value, false);
-	});
-	slider.noUiSlider.on('set', function (values){
-		let value = values[0];
-		setCardBlur(value, true);
-	});
-	$(document).on("click" , "#blog_setting_card_blur_to_default" , function(){
-		slider.noUiSlider.set($("meta[name='theme-card-blur']").attr("content"));
-		setCardBlur($("meta[name='theme-card-blur']").attr("content"), false);
-		localStorage.removeItem("argon_card_blur");
-	});
+	if (slider) {
+		noUiSlider.create(slider, {
+			start: [localStorage["argon_card_blur"] == undefined ? $("meta[name='theme-card-blur']").attr("content") : localStorage["argon_card_blur"]],
+			step: 1,
+			connect: [true, false],
+			range: {
+				'min': [0],
+				'max': [20]
+			}
+		});
+		slider.noUiSlider.on('update', function (values){
+			let value = values[0];
+			setCardBlur(value, false);
+		});
+		slider.noUiSlider.on('set', function (values){
+			let value = values[0];
+			setCardBlur(value, true);
+		});
+		$(document).on("click" , "#blog_setting_card_blur_to_default" , function(){
+			slider.noUiSlider.set($("meta[name='theme-card-blur']").attr("content"));
+			setCardBlur($("meta[name='theme-card-blur']").attr("content"), false);
+			localStorage.removeItem("argon_card_blur");
+		});
+	}
 	if (localStorage["argon_card_blur"] != undefined){
 		setCardBlur(localStorage["argon_card_blur"], false);
 	}
@@ -577,28 +579,30 @@ if (argonConfig.headroom){
 		}
 	}
 	let slider = document.getElementById('blog_setting_card_opacity');
-	noUiSlider.create(slider, {
-		start: [localStorage["argon_card_opacity"] == undefined ? $("meta[name='theme-card-opacity']").attr("content") : localStorage["argon_card_opacity"]],
-		step: 0.05,
-		connect: [true, false],
-		range: {
-			'min': [0.3],
-			'max': [1]
-		}
-	});
-	slider.noUiSlider.on('update', function (values){
-		let value = values[0];
-		setCardOpacity(value, false);
-	});
-	slider.noUiSlider.on('set', function (values){
-		let value = values[0];
-		setCardOpacity(value, true);
-	});
-	$(document).on("click" , "#blog_setting_card_opacity_to_default" , function(){
-		slider.noUiSlider.set($("meta[name='theme-card-opacity']").attr("content"));
-		setCardOpacity($("meta[name='theme-card-opacity']").attr("content"), false);
-		localStorage.removeItem("argon_card_opacity");
-	});
+	if (slider) {
+		noUiSlider.create(slider, {
+			start: [localStorage["argon_card_opacity"] == undefined ? $("meta[name='theme-card-opacity']").attr("content") : localStorage["argon_card_opacity"]],
+			step: 0.05,
+			connect: [true, false],
+			range: {
+				'min': [0.3],
+				'max': [1]
+			}
+		});
+		slider.noUiSlider.on('update', function (values){
+			let value = values[0];
+			setCardOpacity(value, false);
+		});
+		slider.noUiSlider.on('set', function (values){
+			let value = values[0];
+			setCardOpacity(value, true);
+		});
+		$(document).on("click" , "#blog_setting_card_opacity_to_default" , function(){
+			slider.noUiSlider.set($("meta[name='theme-card-opacity']").attr("content"));
+			setCardOpacity($("meta[name='theme-card-opacity']").attr("content"), false);
+			localStorage.removeItem("argon_card_opacity");
+		});
+	}
 	if (localStorage["argon_card_opacity"] != undefined){
 		setCardOpacity(localStorage["argon_card_opacity"], false);
 	}
