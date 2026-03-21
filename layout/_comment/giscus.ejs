@@ -1,6 +1,3 @@
-<% if (theme.giscus.use_custom_theme) { %>
-<link id="giscus-theme-stylesheet" rel="stylesheet" href="/giscus/light.css">
-<% } %>
 <div id="giscus"></div>
 <script>
   const giscusConfig = {
@@ -12,42 +9,17 @@
     inputPosition: "<%= theme.giscus.input_position %>",
     lang: "<%= theme.giscus.lang %>",
     loading: "<%= theme.giscus.loading %>",
-    useCustomTheme: <%= theme.giscus.use_custom_theme !== false %>,
-    lightTheme: "<%= theme.giscus.light_theme || 'light' %>",
-    darkTheme: "<%= theme.giscus.dark_theme || 'dark' %>"
+    useCustomTheme: false
   };
 
   function getGiscusTheme() {
     const html = document.documentElement;
     const isDark = html.classList.contains('darkmode') || html.classList.contains('dark');
-    const isAmoled = html.classList.contains('amoled-dark');
-
-    if (isAmoled) {
-      return giscusConfig.darkTheme;
-    } else if (isDark) {
-      return giscusConfig.darkTheme;
-    } else {
-      return giscusConfig.lightTheme;
-    }
+    return isDark ? 'dark' : 'light';
   }
 
   function updateGiscusTheme() {
     const theme = getGiscusTheme();
-
-    // Update custom CSS if enabled
-    if (giscusConfig.useCustomTheme) {
-      const stylesheet = document.getElementById('giscus-theme-stylesheet');
-      const html = document.documentElement;
-      const isDark = html.classList.contains('darkmode') || html.classList.contains('dark');
-
-      if (isDark) {
-        stylesheet.href = "/giscus/dark.css";
-      } else {
-        stylesheet.href = "/giscus/light.css";
-      }
-    }
-
-    // Update Giscus iframe theme
     const iframe = document.querySelector('#giscus iframe');
     if (iframe) {
       iframe.contentWindow.postMessage({
@@ -79,11 +51,6 @@
     script.crossOrigin = "anonymous";
 
     document.getElementById("giscus").appendChild(script);
-
-    // Load appropriate CSS based on current theme if using custom theme
-    if (giscusConfig.useCustomTheme) {
-      updateGiscusTheme();
-    }
   }
 
   loadGiscus();
@@ -96,8 +63,6 @@
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.attributeName === 'class') {
-        const html = document.documentElement;
-        const isDark = html.classList.contains('darkmode') || html.classList.contains('dark');
         updateGiscusTheme();
       }
     });
