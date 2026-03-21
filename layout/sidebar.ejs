@@ -46,9 +46,9 @@
 					return res;
 				}
 			%>
-			<% if (theme.leftbar_menu != false){ %>
+			<% if (theme.leftbar_menu != false && typeof theme.leftbar_menu === 'object' && !Array.isArray(theme.leftbar_menu)){ %>
 				<ul id='leftbar_part1_menu' class='leftbar-menu'>
-					<%-	get_sidebar_menu(theme.leftbar_menu) %>
+					<%- get_sidebar_menu(theme.leftbar_menu) %>
 				</ul>
 			<% } %>
 			<div class="card-body text-center leftbar-search-button">
@@ -131,32 +131,32 @@
 								</div>
 							</nav>
 							<%
-								if (theme.leftbar_author_links != false){ %>
-									<div class="site-author-links">
-										<% for (i in theme.leftbar_author_links){ %>
-											<div class='site-author-links-item'>
-												<a href="<%= theme.leftbar_author_links[i] %>" rel='noopener' target='_blank'><%- i %></a>
-											</div>
-										<% } %>
-									</div>
-								<% }
-							%>
-							<%
-								if (theme.leftbar_friend_links != false){ %>
-									<div class='site-friend-links'>
-										<div class='site-friend-links-title'><i class='fa fa-fw fa-link'></i> Links</div>
-										<ul class='site-friend-links-ul'>
-											<% for (i in theme.leftbar_friend_links){ %>
-												<li class='site-friend-links-item'>
-													<a href='<%= theme.leftbar_friend_links[i] %>' rel='noopener' target='_blank'><%- i %></a>
-												</li>
-											<% } %>
-										</ul>
-									</div>
-								<% } else { %>
-									<div style="height: 20px;"></div>
-								<% }
-							%>
+					if (theme.leftbar_author_links != false && typeof theme.leftbar_author_links === 'object' && !Array.isArray(theme.leftbar_author_links)){ %>
+						<div class="site-author-links">
+							<% for (i in theme.leftbar_author_links){ %>
+								<div class='site-author-links-item'>
+									<a href="<%= theme.leftbar_author_links[i] %>" rel='noopener' target='_blank'><%- i %></a>
+								</div>
+							<% } %>
+						</div>
+					<% }
+				%>
+				<%
+					if (theme.leftbar_friend_links != false && typeof theme.leftbar_friend_links === 'object' && !Array.isArray(theme.leftbar_friend_links)){ %>
+						<div class='site-friend-links'>
+							<div class='site-friend-links-title'><i class='fa fa-fw fa-link'></i> Links</div>
+							<ul class='site-friend-links-ul'>
+								<% for (i in theme.leftbar_friend_links){ %>
+									<li class='site-friend-links-item'>
+										<a href='<%= theme.leftbar_friend_links[i] %>' rel='noopener' target='_blank'><%- i %></a>
+									</li>
+								<% } %>
+							</ul>
+						</div>
+					<% } else { %>
+						<div style="height: 20px;"></div>
+					<% }
+				%>
 						</div>
 					</div>
 				</div>

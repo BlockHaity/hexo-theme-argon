@@ -214,6 +214,36 @@
 	}
 </style>
 
+<style>
+	/* 顶栏滚动模糊效果 */
+	#navbar-main {
+		transition: all 0.3s ease;
+	}
+	
+	#navbar-main.headroom--pinned {
+		background-color: rgba(var(--themecolor-rgbstr), 0.85) !important;
+		backdrop-filter: blur(10px);
+		-webkit-backdrop-filter: blur(10px);
+		box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	}
+	
+	#navbar-main.headroom--pinned .navbar-brand {
+		color: white !important;
+	}
+	
+	#navbar-main.headroom--pinned .nav-link {
+		color: rgba(255, 255, 255, 0.9) !important;
+	}
+	
+	#navbar-main.headroom--pinned .nav-link:hover {
+		color: white !important;
+	}
+	
+	#navbar-main.headroom--pinned .navbar-toggler-icon {
+		background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+	}
+</style>
+
 <body>
 <div id="toolbar">
 	<header class="header-global">
@@ -249,7 +279,8 @@
 						</li>
 					</ul>
 					<%
-						if (theme.toolbar_menu != false) { %>
+					if (theme.toolbar_menu != false) { %>
+						<% if (typeof theme.toolbar_menu === 'object' && !Array.isArray(theme.toolbar_menu)) { %>
 							<ul class='navbar-nav navbar-nav-hover align-items-lg-center'>
 								<%
 									for (let i in theme.toolbar_menu){ %>
@@ -258,21 +289,19 @@
 												<i class='ni ni-book-bookmark d-lg-none'></i>
 												<span class='nav-link-inner--text'><%= i %></span>
 											</a>
-											<%
-												if (typeof(theme.toolbar_menu[i]) == "object"){ %>
-													<div class="dropdown-menu">
-														<% for (let j in theme.toolbar_menu[i]){ %>
-															<a href='<%= url_for(theme.toolbar_menu[j]) %>' class='dropdown-item'><%= j %></a>
-														<% } %>
-													</div>
-												<% }
-											%>
+											<% if (typeof(theme.toolbar_menu[i]) == "object"){ %>
+											<div class="dropdown-menu">
+												<% for (let j in theme.toolbar_menu[i]){ %>
+													<a href='<%= url_for(theme.toolbar_menu[i][j]) %>' class='dropdown-item'><%= j %></a>
+												<% } %>
+											</div>
+											<% } %>
 										</li>
 									<%}
 								%>
 							</ul>
-						<% }
-					%>
+						<% } %>
+					<% } %>
 					<ul class="navbar-nav align-items-lg-center ml-lg-auto">
 						<li class="nav-item" data-toggle="modal" data-target="#argon_search_modal" id="navbar_search_btn_pc">
 							<a class="nav-link nav-link-icon">

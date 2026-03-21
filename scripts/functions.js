@@ -1,5 +1,5 @@
 // 读配置文件
-hexo.extend.filter.register('after_init', function () {
+hexo.extend.filter.register('before_generate', function () {
 	var rootConfig = hexo.config;
 	var themeConfig = hexo.theme.config || {};
 
@@ -13,23 +13,20 @@ hexo.extend.filter.register('after_init', function () {
 		try {
 			var blogArgonConfigContent = fs.readFileSync(blogArgonConfigPath, 'utf8');
 			blogArgonConfig = yaml.load(blogArgonConfigContent);
+			// 直接使用 _config.argon.yml 的配置，不合并
+			hexo.theme.config = blogArgonConfig;
+			hexo.theme.config.rootConfig = rootConfig;
 		} catch (e) {
 			console.error('Error loading _config.argon.yml:', e);
+			// 加载失败时使用主题默认配置
+			hexo.theme.config = themeConfig;
+			hexo.theme.config.rootConfig = rootConfig;
 		}
+	} else {
+		// 不存在 _config.argon.yml 时使用主题默认配置
+		hexo.theme.config = themeConfig;
+		hexo.theme.config.rootConfig = rootConfig;
 	}
-
-	// 合并配置，博客根目录配置优先
-	var mergedConfig = {};
-	for (var key in themeConfig) {
-		mergedConfig[key] = themeConfig[key];
-	}
-	for (var key in blogArgonConfig) {
-		mergedConfig[key] = blogArgonConfig[key];
-	}
-
-	// 设置主题配置
-	hexo.theme.config = mergedConfig;
-	hexo.theme.config.rootConfig = rootConfig;
 });
 
 
