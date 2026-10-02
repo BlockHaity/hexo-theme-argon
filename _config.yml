@@ -5,8 +5,6 @@ darkmode_autoswitch: false # 自动切换夜间模式，可选: false 默认使�
 enable_amoled_dark: false # 夜间模式样式，false 为灰黑，true 则为暗黑
 card_radius: 4 # 默认卡片圆角大小
 card_shadow: # 默认卡片阴影大小，可选 small 和 big
-card_blur: 0 # 卡片模糊程度，0-20px，0为不模糊
-card_opacity: 1 # 卡片透明度，0-1，1为不透明
 font: sans-serif # 默认字体，可选: sans-serif 无衬线字体, serif 衬线字体
 enable_headroom: false # 滚动时是否自动折叠顶栏
 
