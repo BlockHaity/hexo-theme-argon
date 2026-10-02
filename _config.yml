@@ -37,6 +37,8 @@ sidebar_announcement: '' # 侧栏公告，留空则不显示
 leftbar_menu: # 侧栏顶部菜单，支持无限层级菜单嵌套
   首页: /
   归档: /archives
+  标签: /tags
+  分类: /categories
   二级菜单:
     三级菜单:
       首页: /
@@ -61,6 +63,35 @@ reading_speed_en: 160 # 每分钟英文阅读单词数，用于计算预计阅�
 donate_qrcode_url: '' # 赞赏二维码地址，留空则不显示
 additional_content_after_post: '' # 文末追加信息，支持 HTML，留空则不显示
 article_header_style: default # 文章内小标题样式，可选值: default, 1, 2
+
+# 标签页
+# 入口位置由顶栏 toolbar_menu 与侧栏 leftbar_menu 自行添加条目决定，
+# 例如 `标签: /tags`。若关闭本项，请同步移除菜单中的对应条目，否则会 404。
+enable_tag_page: true # 是否生成标签索引页 /tags
+tag_page_style: cloud # 展示样式，可选值: cloud 标签云, list 列表, grid 栅格卡片
+tag_page_sort: length # 排序字段，可选值: length 文章数, name 名称, none 不排序
+tag_page_order: -1 # 排序方向，-1 降序，1 升序
+tag_page_font_min: 14 # 标签云最小字号，单位 px，仅 style 为 cloud 时生效
+tag_page_font_max: 26 # 标签云最大字号，单位 px，仅 style 为 cloud 时生效
+tag_page_show_count: true # 是否显示文章数
+tag_page_show_card: true # 是否显示页面顶部的渐变信息卡
+tag_page_limit: 0 # 最多显示数量，0 表示不限制
+tag_page_empty_text: '' # 没有标签时的提示文案，留空则使用默认文案
+tag_page_modal_all_link: true # 侧栏「标签」弹窗内是否显示「查看全部」入口
+
+# 分类页
+# 配置项与标签页一一对应，将 tag_page_ 前缀换成 category_page_ 即可。
+enable_category_page: true # 是否生成分类索引页 /categories
+category_page_style: cloud # 展示样式，可选值: cloud 标签云, list 列表, grid 栅格卡片
+category_page_sort: length # 排序字段，可选值: length 文章数, name 名称, none 不排序
+category_page_order: -1 # 排序方向，-1 降序，1 升序
+category_page_font_min: 14 # 标签云最小字号，单位 px，仅 style 为 cloud 时生效
+category_page_font_max: 26 # 标签云最大字号，单位 px，仅 style 为 cloud 时生效
+category_page_show_count: true # 是否显示文章数
+category_page_show_card: true # 是否显示页面顶部的渐变信息卡
+category_page_limit: 0 # 最多显示数量，0 表示不限制
+category_page_empty_text: '' # 没有分类时的提示文案，留空则使用默认文案
+category_page_modal_all_link: true # 侧栏「分类」弹窗内是否显示「查看全部」入口
 
 # 背景
 page_background_url: '/assets/img/banner.jpg' # 页面背景地址，留空则不设页面背景

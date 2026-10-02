@@ -1,0 +1,70 @@
+<%
+	// 标签/分类索引页的共用正文，由 layout/tags.ejs 与 layout/categories.ejs 传入 taxonomy_type
+	const cfg = argon_taxonomy_config(taxonomy_type);
+	const isCategory = (taxonomy_type == 'category');
+	const label = isCategory ? '分类' : '标签';
+	const itemIcon = isCategory ? 'fa-folder-open' : 'fa-tags';
+
+	let items = (isCategory ? site.categories : site.tags).toArray();
+	// 排序：方向在比较函数内部相乘，而不是 sort 之后 reverse，避免并列项顺序被翻转
+	if (cfg.sort != 'none'){
+		const direction = (cfg.order < 0 ? -1 : 1);
+		items.sort(function(a, b){
+			if (cfg.sort == 'name'){
+				return direction * a.name.localeCompare(b.name, 'zh');
+			}
+			return direction * (a.length - b.length);
+		});
+	}
+	if (cfg.limit > 0){
+		items = items.slice(0, cfg.limit);
+	}
+
+	// 字号与进度条基于最终 items 的文章数缩放，items 为空时保持 0，避免 Math.min.apply(null, []) 得到 Infinity
+	let minLength = 0;
+	let maxLength = 0;
+	if (items.length > 0){
+		minLength = Math.min.apply(null, items.map(function(item){ return item.length; }));
+		maxLength = Math.max.apply(null, items.map(function(item){ return item.length; }));
+	}
+	function get_font_size(length){
+		if (maxLength == minLength){
+			return cfg.font_max;
+		}
+		const ratio = (length - minLength) / (maxLength - minLength);
+		return Math.round((cfg.font_min + ratio * (cfg.font_max - cfg.font_min)) * 10) / 10;
+	}
+	function get_bar_width(length){
+		if (maxLength <= 0){
+			return 0;
+		}
+		return Math.round(length / maxLength * 100);
+	}
+%>
+<article class="post post-full card bg-white shadow-sm border-0">
+	<div class="post-content" id="post_content">
+		<% if (items.length == 0) { %>
+			<div class="taxonomy-empty"><i class="fa fa-inbox"></i> <%= cfg.empty_text != '' ? cfg.empty_text : ('暂无' + label) %></div>
+		<% } else { %>
+			<% if (cfg.style == 'list') { %>
+				<div class="taxonomy-list">
+					<% items.forEach(function(item){ %>
+						<a class="taxonomy-item taxonomy-list-item" href="<%= url_for(item.path) %>"><span class="taxonomy-item-name"><%= item.name %></span><span class="taxonomy-list-bar"><span class="taxonomy-list-bar-inner" style="width: <%= get_bar_width(item.length) %>%"></span></span><% if (cfg.show_count) { %><span class="taxonomy-item-num"><%= item.length %></span><% } %></a>
+					<% }); %>
+				</div>
+			<% } else if (cfg.style == 'grid') { %>
+				<div class="taxonomy-grid">
+					<% items.forEach(function(item){ %>
+						<a class="taxonomy-item taxonomy-grid-item" href="<%= url_for(item.path) %>"><i class="fa <%= itemIcon %> taxonomy-grid-icon"></i><span class="taxonomy-item-name"><%= item.name %></span><% if (cfg.show_count) { %><span class="taxonomy-item-num"><%= item.length %></span><% } %></a>
+					<% }); %>
+				</div>
+			<% } else { %>
+				<div class="taxonomy-cloud">
+					<% items.forEach(function(item){ %>
+						<a class="taxonomy-item taxonomy-cloud-item" href="<%= url_for(item.path) %>" style="font-size: <%= get_font_size(item.length) %>px"><span class="taxonomy-item-name"><%= item.name %></span><% if (cfg.show_count) { %><span class="taxonomy-item-num"><%= item.length %></span><% } %></a>
+					<% }); %>
+				</div>
+			<% } %>
+		<% } %>
+	</div>
+</article>

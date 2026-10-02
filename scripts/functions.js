@@ -292,3 +292,38 @@ hexo.extend.helper.register('get_additional_content_after_post', function (post,
 	res = res.replace(/%author%/g, post.author);
 	return res;
 });
+
+// 标签页/分类页配置解析
+// 注意：博客根目录的 _config.argon.yml 会整体覆盖主题配置（见本文件顶部的 before_generate），
+// 因此每个配置项都必须在此处提供兜底默认值，不能依赖主题 _config.yml。
+hexo.extend.helper.register('argon_taxonomy_config', function (type) {
+	const prefix = (type == 'category') ? 'category_page_' : 'tag_page_';
+	// Hexo 会把 helper 绑定到渲染上下文上（this === locals），
+	// 但下面的 get() 是普通函数调用，其 this 并不是上下文，所以这里先取出 theme 配置。
+	const themeConfig = this.theme || {};
+	function get(key, defaultValue) {
+		const value = themeConfig[prefix + key];
+		return (value === undefined || value === null || value === '') ? defaultValue : value;
+	}
+	function toNumber(value, defaultValue) {
+		const n = parseFloat(value);
+		return isNaN(n) ? defaultValue : n;
+	}
+	const style = String(get('style', 'cloud')).toLowerCase();
+	const sort = String(get('sort', 'length')).toLowerCase();
+	let font_min = toNumber(get('font_min', 14), 14);
+	let font_max = toNumber(get('font_max', 26), 26);
+	if (font_min < 8) font_min = 8;
+	if (font_max < font_min) font_max = font_min;
+	return {
+		style: ['cloud', 'list', 'grid'].indexOf(style) >= 0 ? style : 'cloud',
+		sort: ['length', 'name', 'none'].indexOf(sort) >= 0 ? sort : 'length',
+		order: toNumber(get('order', -1), -1) < 0 ? -1 : 1,
+		font_min: font_min,
+		font_max: font_max,
+		show_count: get('show_count', true) !== false,
+		show_card: get('show_card', true) !== false,
+		limit: Math.max(0, Math.floor(toNumber(get('limit', 0), 0))),
+		empty_text: String(get('empty_text', ''))
+	};
+});

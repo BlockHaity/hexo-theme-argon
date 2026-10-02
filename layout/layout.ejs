@@ -1,7 +1,7 @@
 <%- include('header.ejs') %>
 
 <div class="page-information-card-container">
-	<% if (is_tag() || is_category() || (is_archive() && page.year != undefined)) { %>
+	<% if (is_tag() || is_category() || (is_archive() && page.year != undefined) || page.argon_taxonomy_index != undefined) { %>
 		<%- include('information-card.ejs') %>
 	<% } %>
 </div>
@@ -28,6 +28,12 @@
 		<% } %>
 		<% if (is_category()) { %>
 			<%- include('index.ejs') %>
+		<% } %>
+		<% if (page.argon_taxonomy_index == 'tag') { %>
+			<%- include('tags.ejs') %>
+		<% } %>
+		<% if (page.argon_taxonomy_index == 'category') { %>
+			<%- include('categories.ejs') %>
 		<% } %>
 
 <%- include('footer.ejs') %>
