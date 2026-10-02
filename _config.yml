@@ -159,8 +159,11 @@ giscus: # https://giscus.app/zh-CN
   category_id: 'DIC_kwDOJoGsSM4CW-qv'
   mapping: 'title'
   input_position: 'top'
-  light_theme: 'light' # 亮色模式主题（仅在 use_custom_theme: true 时生效），可选: light, light_tritanopia, light_high_contrast, preferred_color_scheme, transparent
-  dark_theme: 'dark' # 暗色模式主题（仅在 use_custom_theme: true 时生效），可选: dark, dark_dimmed, dark_high_contrast, dark_tritanopia, transparent, preferred_color_scheme
+  loading: 'lazy' # 加载时机，lazy 滚动到附近才加载，eager 立即加载
+  use_custom_theme: false # true 使用主题按 theme_color / card_radius 生成的 Argon 配色，false 使用 Giscus 原生主题
+  light_theme: 'light' # 仅在 use_custom_theme 为 false 时生效，可选: light, light_tritanopia, light_high_contrast, preferred_color_scheme, transparent，也可填自定义主题 CSS 的 URL
+  dark_theme: 'dark' # 仅在 use_custom_theme 为 false 时生效，可选: dark, dark_dimmed, dark_high_contrast, dark_tritanopia, transparent, preferred_color_scheme，也可填自定义主题 CSS 的 URL
+  amoled_dark_theme: 'dark' # 仅在 use_custom_theme 为 false 时生效，Giscus 原生没有 amoled 档位，留空等同 dark
   lang: 'zh-CN'
 waline: # https://waline.js.org/guide/get-started.html
   enable: false # 是否启用 Waline 评论系统

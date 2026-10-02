@@ -1,75 +1,133 @@
-<div id="giscus"></div>
+<%
+	var giscusCfg = theme.giscus || {};
+	var giscusRoot = String(config.root || '/').replace(/\/+$/, '') + '/giscus/';
+	// scripts/giscus-theme.js 产出的三个文件名，与生成器保持一致
+	var giscusGenerated = {
+		light: giscusRoot + 'argon-light.css',
+		dark: giscusRoot + 'argon-dark.css',
+		amoled: giscusRoot + 'argon-amoled.css'
+	};
+%><div id="giscus"></div>
 <script>
-  const giscusConfig = {
-    repo: "<%= theme.giscus.repo %>",
-    repoId: "<%= theme.giscus.repo_id %>",
-    category: "<%= theme.giscus.category %>",
-    categoryId: "<%= theme.giscus.category_id %>",
-    mapping: "<%= theme.giscus.mapping %>",
-    inputPosition: "<%= theme.giscus.input_position %>",
-    lang: "<%= theme.giscus.lang %>",
-    loading: "<%= theme.giscus.loading %>",
-    useCustomTheme: false
-  };
+	(function () {
+		var giscusConfig = <%- JSON.stringify({
+			repo: giscusCfg.repo || '',
+			repoId: giscusCfg.repo_id || '',
+			category: giscusCfg.category || '',
+			categoryId: giscusCfg.category_id || '',
+			mapping: giscusCfg.mapping || 'title',
+			inputPosition: giscusCfg.input_position || 'bottom',
+			lang: giscusCfg.lang || 'zh-CN',
+			loading: giscusCfg.loading || 'lazy'
+		}) %>;
 
-  function getGiscusTheme() {
-    const html = document.documentElement;
-    const isDark = html.classList.contains('darkmode') || html.classList.contains('dark');
-    return isDark ? 'dark' : 'light';
-  }
+		// 开启 use_custom_theme 时一律使用生成器按站点 theme_color / card_radius 烘焙的
+		// 那份 CSS；light_theme / dark_theme / amoled_dark_theme 只在关闭时生效，用来选
+		// Giscus 原生主题（或任意第三方主题的 URL）。
+		var giscusConfigured = {
+			light: <%- JSON.stringify(giscusCfg.light_theme || '') %>,
+			dark: <%- JSON.stringify(giscusCfg.dark_theme || '') %>,
+			amoled: <%- JSON.stringify(giscusCfg.amoled_dark_theme || '') %>
+		};
+		var giscusGenerated = <%- JSON.stringify(giscusGenerated) %>;
+		var giscusUseCustom = <%- giscusCfg.use_custom_theme === true ? 'true' : 'false' %>;
+		// 关闭 use_custom_theme 时的兜底：Giscus 原生没有 amoled 档位，沿用 dark
+		var giscusNative = { light: 'light', dark: 'dark', amoled: 'dark' };
 
-  function updateGiscusTheme() {
-    const theme = getGiscusTheme();
-    const iframe = document.querySelector('#giscus iframe');
-    if (iframe) {
-      iframe.contentWindow.postMessage({
-        giscus: {
-          setConfig: {
-            theme: theme
-          }
-        }
-      }, 'https://giscus.app');
-    }
-  }
+		// Giscus iframe 的源是 https://giscus.app，相对路径会解析到 giscus.app 域下；
+		// 而站点的 url 配置若写成 http 又会触发混合内容拦截。因此绝对地址在客户端用
+		// location.origin 拼，既不依赖站点配置，也不会因配置写错而失效。
+		var giscusOrigin = window.location.origin;
+		var giscusBase = (giscusOrigin && giscusOrigin !== 'null') ? giscusOrigin : '';
 
-  function loadGiscus() {
-    const old = document.querySelector('#giscus script');
-    if (old) old.remove();
+		function giscusThemeFor(mode) {
+			if (giscusUseCustom && giscusBase) {
+				return giscusBase + giscusGenerated[mode];
+			}
+			return giscusConfigured[mode] || giscusNative[mode];
+		}
 
-    const script = document.createElement('script');
-    script.src = "https://giscus.app/client.js";
-    script.setAttribute("data-repo", giscusConfig.repo);
-    script.setAttribute("data-repo-id", giscusConfig.repoId);
-    script.setAttribute("data-category", giscusConfig.category);
-    script.setAttribute("data-category-id", giscusConfig.categoryId);
-    script.setAttribute("data-mapping", giscusConfig.mapping);
-    script.setAttribute("data-input-position", giscusConfig.inputPosition);
-    script.setAttribute("data-theme", getGiscusTheme());
-    script.setAttribute("data-lang", giscusConfig.lang);
-    script.setAttribute("data-loading", giscusConfig.loading);
-    script.async = true;
-    script.crossOrigin = "anonymous";
+		// Argon 有三档配色：亮色 / darkmode / darkmode + amoled-dark，
+		// 后者只与 darkmode 同时出现。
+		function getGiscusMode() {
+			var html = document.documentElement;
+			if (html.classList.contains('darkmode')) {
+				return html.classList.contains('amoled-dark') ? 'amoled' : 'dark';
+			}
+			return 'light';
+		}
 
-    document.getElementById("giscus").appendChild(script);
-  }
+		var giscusCurrentTheme = null;
 
-  loadGiscus();
+		function loadGiscus() {
+			var container = document.getElementById('giscus');
+			if (!container) {
+				return;
+			}
+			var old = container.querySelector('script');
+			if (old) {
+				old.remove();
+			}
 
-  document.addEventListener('pjax:end', () => {
-    loadGiscus();
-  });
+			var theme = giscusThemeFor(getGiscusMode());
+			giscusCurrentTheme = theme;
 
-  // Listen for theme changes
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.attributeName === 'class') {
-        updateGiscusTheme();
-      }
-    });
-  });
+			var script = document.createElement('script');
+			script.src = 'https://giscus.app/client.js';
+			script.setAttribute('data-repo', giscusConfig.repo);
+			script.setAttribute('data-repo-id', giscusConfig.repoId);
+			script.setAttribute('data-category', giscusConfig.category);
+			script.setAttribute('data-category-id', giscusConfig.categoryId);
+			script.setAttribute('data-mapping', giscusConfig.mapping);
+			script.setAttribute('data-input-position', giscusConfig.inputPosition);
+			script.setAttribute('data-theme', theme);
+			script.setAttribute('data-lang', giscusConfig.lang);
+			script.setAttribute('data-loading', giscusConfig.loading);
+			script.async = true;
+			script.crossOrigin = 'anonymous';
 
-  observer.observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ['class']
-  });
+			container.appendChild(script);
+		}
+
+		function syncGiscusTheme() {
+			var theme = giscusThemeFor(getGiscusMode());
+			if (theme === giscusCurrentTheme) {
+				return;
+			}
+			giscusCurrentTheme = theme;
+			var iframe = document.querySelector('#giscus iframe');
+			if (!iframe) {
+				return;
+			}
+			iframe.contentWindow.postMessage({
+				giscus: {
+					setConfig: {
+						theme: theme
+					}
+				}
+			}, 'https://giscus.app');
+		}
+
+		// pjax 切换页面时 body 会被替换，但 document 上的监听器不会消失，
+		// 所以这两个监听只绑定一次，否则每次跳转都会多叠一份。
+		if (!window.argonGiscusBound) {
+			window.argonGiscusBound = true;
+
+			// 切换暗色模式时 Argon 会连续增删 <html> 上的 class，这里防抖后再同步。
+			var giscusSyncTimer = null;
+			new MutationObserver(function () {
+				if (giscusSyncTimer) {
+					clearTimeout(giscusSyncTimer);
+				}
+				giscusSyncTimer = setTimeout(syncGiscusTheme, 120);
+			}).observe(document.documentElement, {
+				attributes: true,
+				attributeFilter: ['class']
+			});
+
+			document.addEventListener('pjax:end', loadGiscus);
+		}
+
+		loadGiscus();
+	})();
 </script>
