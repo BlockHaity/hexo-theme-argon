@@ -49,7 +49,8 @@
 					}
 				});
 			</script>
-			<script src="<%= theme.mathjax_v2_cdn_url %>"></script>
+			<% /* 新键名优先，并兼容旧的 argon_ 前缀写法；都未配置时回落到内置 CDN，避免渲染出 undefined */ %>
+			<script src="<%= theme.mathjax_v2_cdn_url || theme.argon_mathjax_v2_cdn_url || '//cdn.jsdelivr.net/npm/mathjax@2.7.5/MathJax.js?config=TeX-AMS_HTML' %>"></script>
 		<% } %>
 		<% if (theme.math_render == 'katex') { /*Katex*/%>
 			<link rel="stylesheet" href="<%= theme.katex_cdn_url %>katex.min.css">

@@ -18,11 +18,13 @@ toolbar_menu: # 顶栏菜单，支持二级菜单
   首页: /home
   二级菜单:
     归档: /archives
+    标签: /tags
+    分类: /categories
 
 # Banner
 banner_title: '' # Banner 标题，留空则跟随博客标题
 enable_banner_title_typing_effect: false # 是否启用 Banner 打字效果
-theme.banner_typing_effect_interval: 100 # Banner 打字间隔时长，单位 ms/字
+banner_typing_effect_interval: 100 # Banner 打字间隔时长，单位 ms/字
 banner_subtitle: '' # Banner 子标题，留空则不显示
 banner_background_url: '/assets/img/banner.jpg' # Banner 背景图，留空则不显示
 banner_background_hide_shapes: false # 是否隐藏 Banner 背景圆形
@@ -101,7 +103,7 @@ footer_html: '' # 页脚 HTML
 # 数学公式
 math_render: '' # 数学公式渲染方案，留空则不渲染，可选值: mathjax3, mathjax2, katex
 mathjax_cdn_url: //cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js # Mathjax 3 CDN 地址
-argon_mathjax_v2_cdn_url: //cdn.jsdelivr.net/npm/mathjax@2.7.5/MathJax.js?config=TeX-AMS_HTML # Mathjax 2 CDN 地址
+mathjax_v2_cdn_url: //cdn.jsdelivr.net/npm/mathjax@2.7.5/MathJax.js?config=TeX-AMS_HTML # Mathjax 2 CDN 地址
 katex_cdn_url: //cdn.jsdelivr.net/npm/katex@0.11.1/dist/ # Katex CDN 地址
 
 # 代码高亮

@@ -358,7 +358,8 @@
 		<% if (enable_banner_title_typing_effect != true){ %>
 			<div class="banner-title text-white"><span class="banner-title-inner"><%= banner_title %></span>
 		<% } else { %>
-			<div class="banner-title text-white" data-text="<%= banner_title; %>" data-interval="<% theme.banner_typing_effect_interval %>"><span class="banner-title-inner">&nbsp;</span>
+			<% /* 兼容历史上错误嵌套为 theme.theme.* 的旧配置写法 */ %>
+			<div class="banner-title text-white" data-text="<%= banner_title; %>" data-interval="<%= parseInt(theme.banner_typing_effect_interval || (theme.theme && theme.theme.banner_typing_effect_interval)) || 100 %>"><span class="banner-title-inner">&nbsp;</span>
 		<% } %>
 		<%- theme.banner_subtitle == '' ? '' : ('<span class="banner-subtitle d-block">' + theme.banner_subtitle + '</span>') %></div>
 	</div>
