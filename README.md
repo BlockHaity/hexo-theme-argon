@@ -164,19 +164,40 @@ category_page_modal_all_link: false
 ```yaml
 giscus:
   enable: true
-  use_custom_theme: true  # true 使用自定义 CSS，false 使用 Giscus 原生主题
-  light_theme: 'light'    # 亮色模式主题
-  dark_theme: 'dark'      # 暗色模式主题
+  loading: 'lazy'          # 评论加载时机，lazy 滚动到附近才加载，eager 立即加载
+  use_custom_theme: true   # true 使用 Argon 配色，false 使用 Giscus 原生主题
+  light_theme: 'light'     # 仅在 use_custom_theme 为 false 时生效
+  dark_theme: 'dark'       # 仅在 use_custom_theme 为 false 时生效
+  amoled_dark_theme: 'dark' # 仅在 use_custom_theme 为 false 时生效
 ```
 
-### 自定义主题模式
-- 自动生成与 Argon 主题匹配的 CSS 样式
-- 支持 AMOLED 暗色模式
-- 自动切换亮色/暗色模式
+### Argon 配色模式（`use_custom_theme: true`）
 
-### Giscus 原生主题模式
+`hexo generate` 时会产出三个 CSS 文件，浏览器按当前模式加载对应的那一份：
+
+| 文件 | 对应 Argon 模式 | 卡片底色 |
+| --- | --- | --- |
+| `giscus/argon-light.css` | 亮色 | `#ffffff` |
+| `giscus/argon-dark.css` | `darkmode` | `#424242` |
+| `giscus/argon-amoled.css` | `darkmode` + `amoled-dark` | `#000000` |
+
+- 主色取自 `theme_color`，圆角取自 `card_radius`，字体栈与页面正文一致
+- 覆盖 Giscus 的 Primer 配色变量（画布、文字、边框、按钮、强调色等），
+  不去改 `gsc-*` 类名——Giscus 官方说明类名与结构可能随版本变动
+- 切换亮色/暗色/AMOLED 时通过 `postMessage` 让 Giscus 同步换主题，无需刷新
+- 主题 URL 在浏览器端用 `location.origin` 拼绝对地址，
+  所以站点的 `url` 配置写成 `http` 也不会影响
+
+> 限制：评论区配色在构建期烘焙，访客用主题色取色器临时改色时不会跟着变。
+> Giscus 的 iframe 是独立文档，`setConfig` 只能接收一个主题 URL，
+> 无法把 CSS 变量传进去，因此没有绕开的办法。
+
+### Giscus 原生主题模式（`use_custom_theme: false`）
+
 - 亮色主题：`light`, `light_tritanopia`, `light_high_contrast`, `preferred_color_scheme`, `transparent`
 - 暗色主题：`dark`, `dark_dimmed`, `dark_high_contrast`, `dark_tritanopia`, `transparent`, `preferred_color_scheme`
+- 这三个键也可以填任意第三方主题 CSS 的 URL
+- Giscus 原生没有 AMOLED 档位，`amoled_dark_theme` 留空等同 `dark`
 
 # Hexo 版相比 Wordpress 版
 
@@ -200,7 +221,14 @@ giscus:
 + 修复 Banner 打字效果间隔配置项 `theme.banner_typing_effect_interval` 因键名嵌套错误而失效的问题，现更名为 `banner_typing_effect_interval`（旧写法仍兼容）
 + 修复 Mathjax 2 的 CDN 配置项 `argon_mathjax_v2_cdn_url` 与模板读取键名不一致导致加载 `undefined` 的问题，现更名为 `mathjax_v2_cdn_url`（旧写法仍兼容）
 + 移除已下线的卡片模糊和透明度设置（`card_blur`、`card_opacity`）及相关死代码
-+ 优化 Giscus 评论系统支持，提供自定义 CSS 主题文件，自动适配亮色/暗色模式，可选择使用自定义样式或 Giscus 原生主题
++ Giscus 评论系统改为由主题生成配色 CSS：`use_custom_theme: true` 时按 `theme_color` / `card_radius` 烘焙出亮色、`darkmode`、`amoled-dark` 三份，切换配色时通过 `postMessage` 同步给 Giscus，无需刷新；`light_theme` / `dark_theme` / `amoled_dark_theme` 改为只在关闭该开关时生效，用于选择 Giscus 原生主题或第三方主题 URL
++ 修复 Giscus 的 `use_custom_theme`、`light_theme`、`dark_theme` 三个配置项从未被模板读取、评论区始终是 Giscus 原生主题的问题
++ 修复 Giscus 评论区的内边距选择器写成 `.giscus` 但模板渲染出的是 `<div id="giscus">`，导致 `padding` 从未生效、iframe 紧贴卡片边缘的问题
++ 修复 Giscus 评论脚本里 `useCustomTheme` 字段定义后从未传给 script；`data-loading` 之前为空字符串，改为可配置的 `loading`（默认 `lazy`）
++ 修复 Giscus 的 `MutationObserver` 与 `pjax:end` 监听在每次 pjax 跳转后重复叠加的问题
++ 移除 `source/giscus/light.css` 与 `source/giscus/dark.css`：两个文件从未被任何代码引用，
+  且其中 17 个 `gsc-*` 类名里有 11 个在 Giscus 中并不存在，`var(--themecolor)` 之类的引用在
+  Giscus 的 iframe 里也永远取不到值（iframe 源是 `giscus.app`，拿不到父页面的 CSS 变量）
 
 ## 20201031 v1.0.2
 + 新增不蒜子用于统计访问人次和文章阅读量
