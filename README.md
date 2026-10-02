@@ -39,14 +39,17 @@ npm install hexo-renderer-ejs
 
 在 `Hexo 根目录` 下创建 `_config.argon.yml` 文件，所有主题配置项均可在此文件中设置。这样在主题更新时配置不会被覆盖。
 
+> **注意**：该文件会**整体覆盖**主题的 `themes/argon/_config.yml`，两者不会合并。因此在这里没有写出的配置项会回退到主题代码内置的默认值（而不是主题 `_config.yml` 里的值）。所有配置项都有内置默认值，只写想改的部分即可。
+
 ### 方式二：使用 data 目录
 
 将 `Hexo 根目录/themes/argon/_config.yml` 复制到 `Hexo 根目录/source/_data` 文件夹中，并重命名为 `argon.yml`，然后修改复制后的配置文件。
 
 ### 主要配置项
 
-- **卡片样式**：支持调节卡片圆角、阴影、模糊程度和透明度
+- **卡片样式**：支持调节卡片圆角和阴影
 - **主题颜色**：可自定义主题色，支持夜间模式和 AMOLED 暗色模式
+- **标签页 / 分类页**：自动生成 `/tags` 与 `/categories` 索引页，展示样式可配置
 - **评论系统**：支持 Gitalk、Giscus、Waline、Twikoo
 - **Giscus 主题**：支持自定义 CSS 主题或使用 Giscus 原生主题，自动适配亮色/暗色模式
 
@@ -88,22 +91,72 @@ Argon 支持给文章设定一些单独的参数，例如文章头图
 
 # 新功能
 
-## 卡片模糊和透明度
+## 标签页与分类页
 
-主题支持为所有卡片添加模糊和透明度效果：
+主题会自动生成标签索引页 `/tags` 和分类索引页 `/categories`，两者的展示样式都可以配置。
 
-### 配置文件设置
+### 开启与关闭
+
 ```yaml
 # _config.argon.yml
-card_blur: 5      # 卡片模糊程度，0-20px，0为不模糊
-card_opacity: 0.95 # 卡片透明度，0-1，1为不透明
+enable_tag_page: true      # 标签页
+enable_category_page: true # 分类页
 ```
 
-### 右下角配置菜单调节
-1. 点击右下角的设置按钮
-2. 使用"模糊"滑块调节卡片模糊程度（0-20px）
-3. 使用"透明度"滑块调节卡片透明度（0.3-1）
-4. 设置会自动保存到本地存储
+如果你已经在 `source/tags/index.md` 或 `source/categories/index.md` 中手写了同名页面，主题会跳过自动生成并保留你自己的页面，此时主题不再为它渲染上述布局。
+
+### 配置入口位置
+
+入口位置和「归档」一样，完全由菜单配置决定，在 `toolbar_menu`（顶栏）和 `leftbar_menu`（侧栏）中自行添加条目：
+
+```yaml
+toolbar_menu:
+  归档: /archives
+  标签: /tags
+  分类: /categories
+
+leftbar_menu:
+  归档: /archives
+  标签: /tags
+  分类: /categories
+```
+
+> 关闭 `enable_tag_page` / `enable_category_page` 时，请同步移除菜单中的对应条目，否则点击会 404。
+
+侧栏「站点概览」中的分类、标签弹窗仍然保留，弹窗内额外提供一个「查看全部」入口跳转到对应索引页。若不需要该入口：
+
+```yaml
+tag_page_modal_all_link: false
+category_page_modal_all_link: false
+```
+
+### 展示样式
+
+`tag_page_style` 与 `category_page_style` 支持三种样式：
+
+| 值 | 说明 |
+|---|---|
+| `cloud` | 标签云，字号按文章数在 `font_min` 与 `font_max` 之间缩放 |
+| `list` | 列表，每行展示名称、相对长度条和文章数 |
+| `grid` | 栅格卡片，适合分类数量较少的站点 |
+
+### 完整配置项
+
+标签页与分类页各有一套对称配置，把前缀 `tag_page_` 换成 `category_page_` 即为分类页配置。以下默认值已内置在主题中，通常无需填写。
+
+| 配置项 | 默认值 | 说明 |
+|---------|--------|------|
+| `enable_tag_page` | `true` | 是否生成标签页 |
+| `tag_page_style` | `cloud` | 展示样式，`cloud` / `list` / `grid` |
+| `tag_page_sort` | `length` | 排序字段，`length` 文章数、`name` 名称、`none` 不排序 |
+| `tag_page_order` | `-1` | 排序方向，`-1` 降序、`1` 升序 |
+| `tag_page_font_min` | `14` | 标签云最小字号，仅 `cloud` 生效 |
+| `tag_page_font_max` | `26` | 标签云最大字号，仅 `cloud` 生效 |
+| `tag_page_show_count` | `true` | 是否显示文章数 |
+| `tag_page_show_card` | `true` | 是否显示页面顶部的渐变信息卡 |
+| `tag_page_limit` | `0` | 最多显示数量，`0` 表示不限制 |
+| `tag_page_empty_text` | `''` | 没有标签时的提示文案，留空使用默认文案 |
+| `tag_page_modal_all_link` | `true` | 侧栏标签弹窗内是否显示「查看全部」 |
 
 ## Giscus 评论主题自定义
 
@@ -143,7 +196,10 @@ giscus:
 
 ## 最新更新
 + 适配现代 Hexo 配置，支持在博客根目录创建 `_config.argon.yml` 管理主题配置
-+ 新增卡片模糊和透明度效果，可在配置文件中设置，也支持在右下角配置菜单中实时调节
++ 新增标签页与分类页 `/tags`、`/categories`，支持标签云 / 列表 / 栅格卡片三种展示样式，排序、字号、数量上限等均可配置，入口位置与归档页一样由菜单配置决定
++ 修复 Banner 打字效果间隔配置项 `theme.banner_typing_effect_interval` 因键名嵌套错误而失效的问题，现更名为 `banner_typing_effect_interval`（旧写法仍兼容）
++ 修复 Mathjax 2 的 CDN 配置项 `argon_mathjax_v2_cdn_url` 与模板读取键名不一致导致加载 `undefined` 的问题，现更名为 `mathjax_v2_cdn_url`（旧写法仍兼容）
++ 移除已下线的卡片模糊和透明度设置（`card_blur`、`card_opacity`）及相关死代码
 + 优化 Giscus 评论系统支持，提供自定义 CSS 主题文件，自动适配亮色/暗色模式，可选择使用自定义样式或 Giscus 原生主题
 
 ## 20201031 v1.0.2
