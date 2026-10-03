@@ -50,6 +50,14 @@
 
 	<%- css('/assets/argon_css_merged.css') %>
 	<%- css('/style.css') %>
+	<% if (theme.enable_code_highlight) {
+		/* 代码主题：两份同时加载，暗色那份默认 disabled。
+		   下面的内联脚本在首次绘制前就会定好 darkmode 类并切换 disabled，所以不会闪 */
+		let codeDarkTheme = theme.code_dark_theme == undefined || theme.code_dark_theme == '' ? theme.code_theme : theme.code_dark_theme;
+	%>
+	<link id="code-theme-light" rel="stylesheet" href="<%- url_for('/assets/vendor/highlight/styles/' + theme.code_theme + '.css') %>">
+	<link id="code-theme-dark" rel="stylesheet" href="<%- url_for('/assets/vendor/highlight/styles/' + codeDarkTheme + '.css') %>" disabled>
+	<% } %>
 	<%- css('//fonts.loli.net/css?family=Open+Sans:300,400,600,700|Noto+Serif+SC:300,600&display=swap') %>
 	<%- js('/assets/argon_js_merged.js') %>
 	<%- js('/assets/js/argon.min.js') %>
@@ -87,12 +95,27 @@
 	</script>
 	<script>
 		var darkmodeAutoSwitch = "<%= theme.darkmode_autoswitch %>";
+		<% if (theme.enable_code_highlight) { %>
+		function syncCodeTheme(){
+			var dark = document.getElementById("code-theme-dark");
+			var light = document.getElementById("code-theme-light");
+			if (dark){
+				dark.disabled = !$("html").hasClass("darkmode");
+			}
+			if (light){
+				light.disabled = $("html").hasClass("darkmode");
+			}
+		}
+		<% } %>
 		function setDarkmode(enable){
 			if (enable == true){
 				$("html").addClass("darkmode");
 			}else{
 				$("html").removeClass("darkmode");
 			}
+			<% if (theme.enable_code_highlight) { %>
+			syncCodeTheme();
+			<% } %>
 			$(window).trigger("scroll");
 		}
 		function toggleDarkmode(){
@@ -139,6 +162,10 @@
 		if (darkmodeAutoSwitch == 'alwayson'){
 			setDarkmode(true);
 		}
+		<% if (theme.enable_code_highlight) { %>
+		/* 上面几个分支可能一次都没走到 setDarkmode，这里兜底同步一次 */
+		syncCodeTheme();
+		<% } %>
 
 		function toggleAmoledDarkMode(){
 			$("html").toggleClass("amoled-dark");

@@ -73,7 +73,7 @@
 			<script>
 				var argonEnableCodeHighlight = true;
 			</script>
-			<%- css('/assets/vendor/highlight/styles/' + theme.code_theme + '.css') %>
+			<%/* 代码主题样式表在 header.ejs 的 <head> 里加载，两份都要在首次绘制前就位 */ %>
 		<% } %>
 
 	</div>
