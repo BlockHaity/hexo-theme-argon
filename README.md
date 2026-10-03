@@ -52,6 +52,7 @@ npm install hexo-renderer-ejs
 - **标签页 / 分类页**：自动生成 `/tags` 与 `/categories` 索引页，展示样式可配置
 - **评论系统**：支持 Gitalk、Giscus、Waline、Twikoo
 - **Giscus 主题**：支持自定义 CSS 主题或使用 Giscus 原生主题，自动适配亮色/暗色模式
+- **代码高亮**：内置 VSCode 现代亮 / 暗色代码主题，可分别指定亮色与暗色模式使用的代码主题
 
 ## 3. 配置搜索功能
 
@@ -199,6 +200,69 @@ giscus:
 - 这三个键也可以填任意第三方主题 CSS 的 URL
 - Giscus 原生没有 AMOLED 档位，`amoled_dark_theme` 留空等同 `dark`
 
+## 代码高亮
+
+代码高亮由 highlight.js 渲染，代码框外观与配色都可以配置。
+
+### 配置选项
+
+```yaml
+# _config.argon.yml
+enable_code_highlight: true    # 是否启用代码高亮
+code_theme: vscode-light       # 亮色模式的代码主题
+code_dark_theme: vscode-dark   # 暗色 + 暗黑模式的代码主题，留空则回落 code_theme
+```
+
+| 配置项 | 说明 |
+|--------|------|
+| `enable_code_highlight` | 是否启用 highlight.js 代码高亮 |
+| `code_theme` | 亮色模式使用的代码主题 |
+| `code_dark_theme` | 暗色与 AMOLED 暗黑模式使用的代码主题 |
+
+主题分两档：亮色模式走 `code_theme`，暗色和 AMOLED 暗黑模式共用 `code_dark_theme`。
+这与 Giscus 的三档配色逻辑一致，但两者互不影响，各自读自己的配置键。
+
+> `code_dark_theme` 留空时会**回落到 `code_theme`**，也就是三种模式共用同一个主题，
+> 相当于旧版本的行为。因此升级后不写这个键，代码框配色和之前一样。
+
+### 选择代码主题
+
+`code_theme` / `code_dark_theme` 的值是 `source/assets/vendor/highlight/styles/` 下的文件名，**不含 `.css`**。
+
+内置的默认主题是手工编写的 `vscode-light` / `vscode-dark`，完全照搬 VSCode 现代亮色 / 暗色主题的色值：
+
+| 主题 | 背景 | 前景 |
+| --- | --- | --- |
+| `vscode-light` | `#FFFFFF` | `#3B3B3B` |
+| `vscode-dark` | `#1F1F1F` | `#CCCCCC` |
+
+除这两套之外，目录里还有 highlight.js **v11.12.0** 官方 `styles/` 根目录的 **82 套主题**，
+可以直接填进这两个键，常用的几款：
+
+- `github-dark-dimmed`、`tokyo-night-dark`、`rose-pine`、`night-owl`、`nord`、`cybertopia-*`
+- `shades-of-purple`、`vs-dark`、`intellij-light`、`stackoverflow-*`、`a11y-*`
+
+> 这些主题**不包含** highlight.js `styles/base16/` 下的那批排列变体。
+> 想用官方主题就直接写文件名，例如 `code_theme: github`；没有后缀的写法是错的。
+
+### 表面色与 token 颜色
+
+代码框的**外壳**由 Argon 主题的 `source/style.css` 负责，与代码主题无关：边框、圆角、行号槽、
+头栏按钮都属于这一层。
+
+圆角跟随站点的 `card_radius`（即 `--card-radius`），但会**收敛到 8px 上限**
+（`min(var(--card-radius), 8px)`）。直接把 `--card-radius` 用上去的话，
+`card_radius: 30` 会让代码框圆得像胶囊，不好看。
+
+由 `code_theme` / `code_dark_theme` 决定的，是**代码区本身的底色与字色，以及全部语法 token 颜色**
+（关键字、字符串、注释等）。这部分 Argon 不参与覆盖，选了哪个主题就是哪个主题的样子。
+
+行号用的是 VSCode 的 `editorLineNumber.foreground`（亮暗都是 `#6E7681`），但整体加了 50% 透明度。
+这样在 82 套主题里那些底色偏极端的主题（如 `blackboard`）上也不会出现过亮或过暗的行号。
+
+> 换完主题如果页面出现闪烁、或者颜色和预期对不上，先确认 `code_theme` 里写的文件名
+> 确实存在于 `source/assets/vendor/highlight/styles/` 目录下，文件名不对时页面会直接 404。
+
 # Hexo 版相比 Wordpress 版
 
 + 保留了 Wordpress 版的大部分特性
@@ -229,6 +293,22 @@ giscus:
 + 移除 `source/giscus/light.css` 与 `source/giscus/dark.css`：两个文件从未被任何代码引用，
   且其中 17 个 `gsc-*` 类名里有 11 个在 Giscus 中并不存在，`var(--themecolor)` 之类的引用在
   Giscus 的 iframe 里也永远取不到值（iframe 源是 `giscus.app`，拿不到父页面的 CSS 变量）
++ highlight.js 从 v9.18.1 升级到 v11.12.0，官方主题从 96 套换成 v11 `styles/` 根目录的 82 套
+  （不含 `styles/base16/` 下的排列变体）
++ 代码框默认主题改为手工编写的 `vscode-light` / `vscode-dark`，完全照搬 VSCode 现代亮色 / 暗色主题（亮色背景 `#FFFFFF`，暗色背景 `#1F1F1F`）
++ 新增 `code_dark_theme`，代码框配色区分亮色与暗色 + 暗黑两档，暗色和暗黑模式共用该主题；
+  留空则回落到 `code_theme`，旧配置不受影响
++ 代码框外观重做：去掉原先那个假的 macOS 三点圆点装饰，改成带语言标签的头栏；
+  行号槽不再靠 `background: inherit` 伪造背景
++ 代码框交互补全：全屏支持 Esc 退出、点击遮罩退出、退出后焦点归还；
+  触屏设备上控制按钮不再隐藏（原先 `opacity:0` 只在 hover 时显示，触屏根本看不到）
++ 修复行内代码背景色写成 `##eff1f5`（双 `#`，整条声明无效）导致亮色模式下没有背景的问题
++ 修复代码框的 `border-radius:100px` 被下一行覆盖的死代码
++ 修复代码框 tooltip 定位硬编码导致溢出的问题
++ 复制按钮原先每渲染一个代码块就 `new` 一个 ClipboardJS 并绑定到全局随机 id，
+  pjax 换页后实例与 id 全部泄漏；改为注册单个委托实例
++ 合并两段几乎逐字重复的代码高亮 JS 为一次遍历。原先每个代码块会被处理两次，
+  生成两个行号表格和两个控制区
 
 ## 20201031 v1.0.2
 + 新增不蒜子用于统计访问人次和文章阅读量
