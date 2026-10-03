@@ -263,6 +263,65 @@ code_dark_theme: vscode-dark   # 暗色 + 暗黑模式的代码主题，留空�
 > 换完主题如果页面出现闪烁、或者颜色和预期对不上，先确认 `code_theme` 里写的文件名
 > 确实存在于 `source/assets/vendor/highlight/styles/` 目录下，文件名不对时页面会直接 404。
 
+### 在编辑器中打开
+
+代码框头栏的第 4 个控制按钮是「在编辑器中打开」（原先这个位置放的是全屏按钮，本次已移除）。
+点开后会弹出一个全屏的 Monaco 编辑器——Monaco 就是 VS Code 的编辑器内核，与 vscode.dev 同源——
+可以把代码捞出来改，改完可以复制，也可以「另存为」下载到本地。
+
+```yaml
+# _config.argon.yml
+enable_codeblock_editor: true    # 是否启用代码框「在编辑器中打开」按钮
+monaco_cdn_url: https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/ # Monaco CDN 根目录，留空则只用本地副本
+```
+
+| 配置项 | 说明 |
+|--------|------|
+| `enable_codeblock_editor` | 是否在代码框头栏渲染「在编辑器中打开」按钮，默认 `true` |
+| `monaco_cdn_url` | Monaco 的 CDN 根目录，jsDelivr、unpkg 等均可；留空则只用本地副本 |
+
+Monaco 按 **CDN 优先、本地兼底** 的顺序加载：先试 `monaco_cdn_url`，拿不到再回落到
+`/assets/vendor/monaco/min/vs/`（由 `config.root` 拼出）。它**不进首屏同步加载的
+`argon_js_merged.js`**，而是等用户点了按钮才开始下载；加载成功后 `window.monaco` 常驻，
+同一页里第二次打开就是瞬开。Esc 或点击遮罩可以关闭，关闭后焦点会还给原来那个按钮；
+两处都失败时弹「编辑器加载失败」提示。
+
+本地兼底是要付体积代价的。仓库里躺着完整的一份 Monaco 0.52.2，位于
+`source/assets/vendor/monaco/min/vs/`，一共 3 个文件：
+
+| 文件 | 原始体积 | gzip 后 |
+| --- | --- | --- |
+| `editor/editor.main.js` | 3,766,654 字节（约 3.59 MiB） | 950,159 字节（约 0.91 MiB） |
+| `editor/editor.main.css` | 131,858 字节（约 129 KiB） | 20,536 字节（约 20 KiB） |
+| `loader.js` | 30,051 字节（约 29 KiB） | 9,212 字节（约 9 KiB） |
+| 合计 | 3,929,661 字节（约 3.75 MiB） | 979,907 字节（约 0.93 MiB） |
+
+> gzip 一列是逐个文件压缩后相加；作为对照，jsDelivr 上 `editor.main.js` 的实际传输体积是
+> 921,420 字节（约 0.88 MiB）。
+
+这 3.75 MiB 是**实打实的仓库与产物体积**：它要跟着主题仓库走，`hexo generate` 时也会被原样
+拷进 `public/assets/vendor/monaco/`。好在访客平时碰不到它——CDN 正常时那 0.9 MiB 量级的传输
+全部发生在 CDN 上，而且**只在点了按钮之后才发起**，不拖慢首屏；本地兼底只在 CDN 拿不到时才启用。
+
+文件名与扩展名按代码块的语言自动决定：`bash` → `snippet.sh`、`js` → `snippet.js`、
+`py` → `snippet.py`，此外还有 `ts` → `.ts`、`yaml` → `.yml`、`powershell` → `.ps1` 等。
+highlight.js 不认识的语言（以及 `plaintext`）没有对应的 Monaco 语言 id，存为 `snippet.txt`，
+工具条左侧会显示这个文件名。
+
+能力边界摆在这里，免得按 VS Code 的期待去用它：
+
+- 只有 basic languages 的**语法高亮**，没有语言服务：没有智能提示，没有代码补全。
+  打包的 `editor.main.js` 里 `monaco.languages.typescript` 只是个入口壳，它要按需加载
+  `vs/language/typescript/tsMode` 和 `tsWorker`，而这些文件不在兼底里，所以 JS / TS 同样只是着色。
+- 这份 `editor.main.js` 实测注册了 83 种语言的词法规则，但**不含 haskell / erlang / latex**。
+  主题自带的 highlight.js 是只打包了 36 种语言的定制构建，同样不含这三个，
+  所以这类代码块在页面和编辑器里都没有语法着色。
+- 编辑全程在浏览器本地完成，代码不会上传到任何服务器。
+- 「另存为」用的是浏览器原生能力：`Blob` + `URL.createObjectURL` + `<a download>`，
+  触发的是浏览器自己的下载，不经过主题中转。
+- 编辑器配色跟随页面的亮色 / 暗色 / AMOLED 暗黑模式（内置 `vs` 与 `vs-dark`），
+  页面配色切换时实时跟着换。
+
 # Hexo 版相比 Wordpress 版
 
 + 保留了 Wordpress 版的大部分特性
@@ -309,6 +368,16 @@ code_dark_theme: vscode-dark   # 暗色 + 暗黑模式的代码主题，留空�
   pjax 换页后实例与 id 全部泄漏；改为注册单个委托实例
 + 合并两段几乎逐字重复的代码高亮 JS 为一次遍历。原先每个代码块会被处理两次，
   生成两个行号表格和两个控制区
++ 代码框头栏移除「全屏」按钮，第 4 个控制按钮改为「在编辑器中打开」：点击后弹出全屏 Monaco 编辑器
+  （Monaco 即 VS Code 的编辑器内核，与 vscode.dev 同源），可直接修改代码、复制或「另存为」下载到本地，
+  编辑器配色跟随页面亮色 / 暗色 / AMOLED 暗黑模式
++ 新增 `enable_codeblock_editor`（默认 `true`）与 `monaco_cdn_url` 两个配置项。Monaco 走 CDN 优先、
+  `source/assets/vendor/monaco/`（3 个文件，约 3.75 MiB）本地兼底，只在点击按钮时才加载，
+  不进首屏的 `argon_js_merged.js`；按语言自动决定另存为的扩展名，未识别语言存为 `.txt`
++ 随之清理全屏按钮的遗留死代码：`setCodeblockFullscreen()` 与三个委托处理器（按钮点击、遮罩点击、Esc）、
+  `.hljs-fullscreen-backdrop`、`body.hljs-fullscreen-open`、`.hljs-codeblock-fullscreen`、
+  `@keyframes codeblock-fullscreen`，以及 `全屏` / `退出全屏` 在 en_US / ru_RU / zh_TW 三份词典中的条目；
+  其中的滚动锁定与关闭后焦点归还两处设计被编辑层沿用
 
 ## 20201031 v1.0.2
 + 新增不蒜子用于统计访问人次和文章阅读量
