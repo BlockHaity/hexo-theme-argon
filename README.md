@@ -286,41 +286,69 @@ Monaco 按 **CDN 优先、本地兼底** 的顺序加载：先试 `monaco_cdn_ur
 同一页里第二次打开就是瞬开。Esc 或点击遮罩可以关闭，关闭后焦点会还给原来那个按钮；
 两处都失败时弹「编辑器加载失败」提示。
 
+编辑层里的常用功能（对齐 VS Code 的习惯）：
+
+| 位置 | 功能 |
+|------|------|
+| 工具条 | 查找（`Ctrl/Cmd+F`）、替换（`Ctrl+H`）、减小字号、增大字号、折行开关、另存为、复制、关闭 |
+| 状态栏（左侧） | `行 x, 列 y`；有选区时显示已选字符数 |
+| 状态栏（右侧） | 缩进（`空格: n` / `制表符: n`，按代码内容自动探测）、换行符（LF / CRLF）、**语言切换器** |
+| 语言切换器 | 列出 Monaco 注册的全部语言（含运行时补的 diff / makefile）；切换后着色与「另存为」的扩展名一起变 |
+| Esc | **分层关闭**：先关查找框 / 命令面板，再关整个编辑层；没有浮层时一次 Esc 就关掉 |
+| 其它 | `F1` 命令面板（Monaco 自带）、括号匹配与自动闭合、多光标（`Alt+点击`）、代码折叠 |
+
+语言识别不出来时（比如写了 ```` ```某些语言 ````），页面和编辑器都会退化成纯文本，
+这时可以直接在状态栏的语言切换器里手动指定，不用回去改文章。
+
 本地兼底是要付体积代价的。仓库里躺着完整的一份 Monaco 0.52.2，位于
-`source/assets/vendor/monaco/min/vs/`，一共 3 个文件：
+`source/assets/vendor/monaco/min/vs/`，一共 94 个文件：
 
-| 文件 | 原始体积 | gzip 后 |
-| --- | --- | --- |
-| `editor/editor.main.js` | 3,766,654 字节（约 3.59 MiB） | 950,159 字节（约 0.91 MiB） |
-| `editor/editor.main.css` | 131,858 字节（约 129 KiB） | 20,536 字节（约 20 KiB） |
-| `loader.js` | 30,051 字节（约 29 KiB） | 9,212 字节（约 9 KiB） |
-| 合计 | 3,929,661 字节（约 3.75 MiB） | 979,907 字节（约 0.93 MiB） |
+| 分组 | 文件数 | 原始体积 | gzip 后 |
+| --- | ---: | ---: | ---: |
+| `editor/`（内核 + 样式） | 2 | 3,807.1 KiB | 950.4 KiB |
+| `loader.js` | 1 | 29.3 KiB | 9.0 KiB |
+| `basic-languages/**`（语法高亮词法） | 81 | 486.2 KiB | 181.7 KiB |
+| `language/**`（json / css / html / ts 语言服务） | 8 | 7,071.3 KiB | 1,581.1 KiB |
+| `base/worker/workerMain.js` | 1 | 367.7 KiB | 112.0 KiB |
+| `base/.../codicon.ttf`（UI 图标字体） | 1 | 78.5 KiB | 43.4 KiB |
+| 合计 | **94** | **11.56 MiB** | **2.81 MiB** |
 
-> gzip 一列是逐个文件压缩后相加；作为对照，jsDelivr 上 `editor.main.js` 的实际传输体积是
-> 921,420 字节（约 0.88 MiB）。
-
-这 3.75 MiB 是**实打实的仓库与产物体积**：它要跟着主题仓库走，`hexo generate` 时也会被原样
-拷进 `public/assets/vendor/monaco/`。好在访客平时碰不到它——CDN 正常时那 0.9 MiB 量级的传输
-全部发生在 CDN 上，而且**只在点了按钮之后才发起**，不拖慢首屏；本地兼底只在 CDN 拿不到时才启用。
+这 11.56 MiB 是**实打实的仓库与产物体积**：它要跟着主题仓库走，`hexo generate` 时也会被原样
+拷进 `public/assets/vendor/monaco/`。好在访客平时碰不到它——CDN 正常时传输全部发生在 CDN 上，
+而且**只在点开编辑器之后才发起**，不拖慢首屏；本地兼底只在 CDN 拿不到时才启用，
+并且各资源按需加载：打开一个代码块只拉它用到的那个词法文件（3–20 KiB），
+只有真的要 JS / TS / JSON / CSS / HTML 的智能提示时才拉对应的语言服务 worker。
 
 文件名与扩展名按代码块的语言自动决定：`bash` → `snippet.sh`、`js` → `snippet.js`、
 `py` → `snippet.py`，此外还有 `ts` → `.ts`、`yaml` → `.yml`、`powershell` → `.ps1` 等。
-highlight.js 不认识的语言（以及 `plaintext`）没有对应的 Monaco 语言 id，存为 `snippet.txt`，
-工具条左侧会显示这个文件名。
+识别不出的语言存为 `snippet.txt`，工具条左侧会显示这个文件名。
 
 能力边界摆在这里，免得按 VS Code 的期待去用它：
 
-- 只有 basic languages 的**语法高亮**，没有语言服务：没有智能提示，没有代码补全。
-  打包的 `editor.main.js` 里 `monaco.languages.typescript` 只是个入口壳，它要按需加载
-  `vs/language/typescript/tsMode` 和 `tsWorker`，而这些文件不在兼底里，所以 JS / TS 同样只是着色。
-- 这份 `editor.main.js` 实测注册了 83 种语言的词法规则，但**不含 haskell / erlang / latex**。
-  主题自带的 highlight.js 是只打包了 36 种语言的定制构建，同样不含这三个，
-  所以这类代码块在页面和编辑器里都没有语法着色。
+- **有语言服务**：JSON / CSS / HTML / JavaScript / TypeScript 有诊断（红波浪线）、补全、
+  跳转定义与格式化数据源；worker 跑在**同源 blob 代理**里，这样走 CDN 时也不受同源策略限制。
+  普通 JS 默认不开 `checkJs`，所以类型错误不会报，语法错误会报。
+- 其余语言是 basic languages 的**纯语法高亮**（Monarch 词法），没有语言服务。
+- `diff` / `makefile`：Monaco 0.52.2 确实没有这两个语言，但主题自带的 highlight.js 有。
+  为了不出现「页面有高亮、编辑器纯文本」，主题侧用精简 Monarch 规则在运行时补上了
+  （语言 id `argon-diff` / `argon-makefile`），属于 best-effort，与 VS Code 的 TextMate
+  规则不会逐字一致。
+- 主题自带 highlight.js 是只打包了 36 种语言的定制构建；Monaco 侧有 81 种可高亮。
+  两边都没有 haskell / erlang / latex / nginx 这类语言，所以这些代码块在页面和编辑器里
+  都没有语法着色（可在状态栏手动切到相近语言）。
 - 编辑全程在浏览器本地完成，代码不会上传到任何服务器。
 - 「另存为」用的是浏览器原生能力：`Blob` + `URL.createObjectURL` + `<a download>`，
   触发的是浏览器自己的下载，不经过主题中转。
 - 编辑器配色跟随页面的亮色 / 暗色 / AMOLED 暗黑模式（内置 `vs` 与 `vs-dark`），
   页面配色切换时实时跟着换。
+- Monaco 自身 UI（查找框、右键菜单等）是英文：本地副本没带 `nls.messages.<lang>.js`
+  语言包，主题自己的按钮与状态栏文案走 `__()`，中英俄繁都已覆盖。
+
+> 关于「语法高亮」的一个坑（已修）：`editor.main.js` 只内联了语言注册表，**词法本体与
+> 语言服务都是懒加载的 AMD 模块**，漏一个文件不会有任何报错，只会静默退化成纯文本。
+> 早期版本的本地副本只放了 3 个文件，于是 CDN 被墙时出现「编辑器能打开、但所有语言都是
+> 纯文本」。现在按模块清单整组 vendor，并在 `source/assets/vendor/monaco/README.md`
+> 里留了升级后必跑的自检脚本。
 
 # Hexo 版相比 Wordpress 版
 
@@ -378,6 +406,30 @@ highlight.js 不认识的语言（以及 `plaintext`）没有对应的 Monaco �
   `.hljs-fullscreen-backdrop`、`body.hljs-fullscreen-open`、`.hljs-codeblock-fullscreen`、
   `@keyframes codeblock-fullscreen`，以及 `全屏` / `退出全屏` 在 en_US / ru_RU / zh_TW 三份词典中的条目；
   其中的滚动锁定与关闭后焦点归还两处设计被编辑层沿用
++ **修复「CDN 被墙时编辑器里所有语言都是纯文本」**：`editor.main.js` 只内联语言注册表，
+  词法本体是懒加载的 AMD 模块，而本地副本此前只放了 3 个文件，语言模块 404 后 Monaco
+  静默降级为纯文本。现在补齐 81 个 `basic-languages` 词法模块
++ **接上真实语言服务**：补齐 `vs/language/**`（json / css / html / typescript 的 `*Mode.js` 与
+  `*Worker.js`）、通用 `base/worker/workerMain.js` 与图标字体 `codicon.ttf`；
+  `MonacoEnvironment` 从「空转 stub worker」改为**同源 blob 代理**，这样走 CDN 时也能创建 worker
+  （worker 脚本受同源策略约束，不能直接 `new Worker(cdnUrl)`）。本地副本从 3 个文件 3.75 MiB
+  增至 94 个文件 11.56 MiB（gzip 2.81 MiB），仍是点击后才按需加载
++ 补齐语言映射：`objective-c` / `swift` / `vb` / `php-template` / `shell-session` / `mdx` / `pug` /
+  `fsharp` / `scala` / `dart` / `scheme` / `tcl` / `systemverilog` / `cypher` / `bicep` / `azcli` /
+  `sparql` / `liquid` / `apex` / `wgsl` / XML 家族；`diff` 与 `makefile` 改为运行时注册的精简
+  Monarch 规则（`argon-diff` / `argon-makefile`），与页面 highlight.js 的表现对齐；
+  表里没有的语言再用别名 / 扩展名去 Monaco 注册表兜底猜一次，
+  但显式登记为「确实没有」的语言（如 matlab / nginx）不参与兜底，避免张冠李戴
++ 编辑层新增状态栏（对齐 VSCode 底栏）：左侧 `行 x, 列 y` 与选中字符数，右侧缩进 / 换行符 /
+  **语言切换器**（可手动指定识别不出的语言，切换后着色与另存为扩展名同步变化）
++ 编辑层工具条新增 查找 / 替换 / 减小字号 / 增大字号 / 折行开关；字号与折行都复用 Monaco
+  自带 action（`actions.find`、`editor.action.startFindReplaceAction`），不自己造轮子
++ 修复 Esc 的语义：改为**捕获阶段**分层关闭，先关查找框 / 命令面板，最后才关编辑层。
+  原先无条件关闭整个编辑层，会连查找框一起关掉
++ 新增 `查找` / `替换` / `折行` / `增大字号` / `减小字号` / `选择语言` / `行` / `列` /
+  `已选择` / `个字符` / `空格` / `制表符` / `换行符` 共 13 条文案，en_US / ru_RU / zh_TW 三份词典同步补齐
++ 修复编辑层加载失败时的 `TypeError`（`getCodeLanguage()` 传了 DOM 元素而不是 jQuery 对象），
+  该异常会让编辑层直接打不开
 
 ## 20201031 v1.0.2
 + 新增不蒜子用于统计访问人次和文章阅读量
